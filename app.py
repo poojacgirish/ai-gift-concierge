@@ -70,17 +70,34 @@ with st.form("gift_form"):
 # Backend Logic
 # -----------------------------
 if submitted:
-    prompt = (
-        "You are an expert personal shopper. "
-        f"The user is looking for a gift. Recipient age: {age}, "
-        f"Relationship: {relationship}, "
-        f"Budget: {budget}, "
-        f"Interests: {interests}. "
-        "Provide exactly 3 specific, highly searchable real-world gift recommendations. "
-        "Format your response strictly with the Product Name (bolded), Estimated Price, "
-        "and one sentence explaining why it is a perfect match based on their interests. "
-        "Do not include introductory or concluding conversational filler."
-    )
+    prompt = f"""
+You are an expert personal shopper.
+
+The user is looking for a gift.
+
+Recipient age: {age}
+Relationship: {relationship}
+Budget: {budget}
+Interests: {interests}
+
+Provide exactly 3 specific, highly searchable real-world gift recommendations.
+
+For each recommendation, use this exact format:
+
+**Product Name**
+Estimated Price: <price>
+Why it's a perfect match: <one sentence>
+
+[Find it here](https://www.google.com/search?tbm=shop&q=Product+Name)
+
+For each of the 3 products, you must include a clickable Markdown link that routes the user to Google Shopping. Format it exactly like this:
+
+[Find it here](https://www.google.com/search?tbm=shop&q=Product+Name)
+
+Ensure you replace spaces in the URL with +. Do not guess or invent store URLs. Only use the Google Shopping search URL format above.
+
+Do not include introductory or concluding conversational filler.
+"""
 
     try:
         with st.spinner("Finding the perfect gifts... 🎁"):
