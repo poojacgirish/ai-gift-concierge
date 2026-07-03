@@ -1,5 +1,5 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai
 
 st.set_page_config(
     page_title="AI Gift Concierge",
@@ -7,17 +7,15 @@ st.set_page_config(
     layout="centered",
 )
 
-# Configure Gemini API
+# Configure Gemini client
 try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 except Exception:
     st.error(
         "GEMINI_API_KEY not found in Streamlit secrets. "
         "Please add it to your Streamlit secrets before running the app."
     )
     st.stop()
-
-model = genai.GenerativeModel("gemini-1.5-flash-latest")
 
 # -----------------------------
 # Main UI
@@ -72,7 +70,7 @@ with st.form("gift_form"):
 # Backend Logic
 # -----------------------------
 if submitted:
-    system_prompt = (
+    prompt = (
         "You are an expert personal shopper. "
         f"The user is looking for a gift. Recipient age: {age}, "
         f"Relationship: {relationship}, "
@@ -86,7 +84,10 @@ if submitted:
 
     try:
         with st.spinner("Finding the perfect gifts... 🎁"):
-            response = model.generate_content(system_prompt)
+            response = client.models.generate_content(
+                model="gemini-3.5-flash",
+                contents=prompt,
+            )
 
         st.success("Here are your personalized gift recommendations!")
         st.markdown(response.text)
