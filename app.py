@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+import google.generativeai as genai
 
 st.set_page_config(
     page_title="AI Gift Concierge",
@@ -7,15 +7,17 @@ st.set_page_config(
     layout="centered",
 )
 
-# -----------------------------
-# Sidebar - API Key
-# -----------------------------
-st.sidebar.header("OpenAI Settings")
-api_key = st.sidebar.text_input(
-    "OpenAI API Key",
-    type="password",
-    help="Paste your OpenAI API key here. It is only used for this session.",
-)
+# Configure Gemini API
+try:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+except Exception:
+    st.error(
+        "GEMINI_API_KEY not found in Streamlit secrets. "
+        "Please add it to your Streamlit secrets before running the app."
+    )
+    st.stop()
+
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # -----------------------------
 # Main UI
@@ -70,12 +72,6 @@ with st.form("gift_form"):
 # Backend Logic
 # -----------------------------
 if submitted:
-    if not api_key.strip():
-        st.warning("Please enter your OpenAI API key in the sidebar before generating gift ideas.")
-        st.stop()
-
-    client = OpenAI(api_key=api_key)
-
     system_prompt = (
         "You are an expert personal shopper. "
         f"The user is looking for a gift. Recipient age: {age}, "
@@ -90,21 +86,10 @@ if submitted:
 
     try:
         with st.spinner("Finding the perfect gifts... 🎁"):
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": system_prompt,
-                    }
-                ],
-                temperature=0.8,
-            )
-
-        result = response.choices[0].message.content
+            response = model.generate_content(system_prompt)
 
         st.success("Here are your personalized gift recommendations!")
-        st.markdown(result)
+        st.markdown(response.text)
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
